@@ -1,4 +1,4 @@
-## anicli-web
+## anipy-web
 
 > a simple, minimal web interface for [anipy-cli](https://github.com/sdaqo/anipy-cli/tree/master).
 
