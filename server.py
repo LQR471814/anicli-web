@@ -1,6 +1,25 @@
 from bottle import route, run, view, request, static_file, error, HTTPError, get, template
 from urllib.parse import urlunsplit
 import anipy_cli
+import json
+
+EPISODE_HISTORY = []
+try:
+    with open("history.json", "r") as f:
+        EPISODE_HISTORY = json.loads(f.read())
+except:
+    pass
+
+def history_entry(show_path, ep):
+    return { "show_path": show_path, "ep": ep }
+
+def add_history_entry(entry):
+    global EPISODE_HISTORY
+    EPISODE_HISTORY.append(entry)
+    if len(EPISODE_HISTORY) > 1024:
+        EPISODE_HISTORY = EPISODE_HISTORY[1:]
+    with open("history.json", "w") as f:
+        f.write(json.dumps(EPISODE_HISTORY))
 
 def join(p1, p2):
     if p1[len(p1)-1] == "/" and p2[0] == "/":
@@ -31,13 +50,26 @@ def show_path_to_name(show_path):
 def error404(error):
     return 'not found.'
 
+@get('/static/<filepath:path>')
+def static(filepath):
+    return static_file(filepath, root='./static')
+
 @get('/')
 def index():
     return static_file("search.html", root='./static')
 
-@get('/static/<filepath:path>')
-def static(filepath):
-    return static_file(filepath, root='./static')
+@get('/history')
+@view('base')
+def history():
+    body = '<ul>\n'
+    for entry in reversed(EPISODE_HISTORY):
+        body += template(
+            '<li><a href="{{href}}">{{name}}</a></li>\n',
+            href=watch_url(entry["show_path"], entry["ep"]),
+            name=f'{entry["ep"]} | {show_path_to_name(entry["show_path"])}'
+        )
+    body += '</ul>'
+    return { 'body': body, 'title': 'watch history' }
 
 @get('/show')
 @view('base')
@@ -92,6 +124,8 @@ def watch(show_path, ep):
         ep=ep,
     )
 
+    add_history_entry(history_entry(show_path, ep))
+
     ep_class = anipy_cli.epHandler(entry)
     latest_ep = ep_class.get_latest()
     entry = ep_class.gen_eplink()
@@ -100,9 +134,9 @@ def watch(show_path, ep):
     url_class.stream_url()
     entry = url_class.get_entry()
 
-    body = f"<h3 style='margin-top: 0; margin-bottom: 0.5rem'>episode {ep}</h3>"
+    body = f"<p style='margin-top: 0; margin-bottom: 0.5rem'>episode {ep}</p>"
     body += "<div style='margin-bottom: 0.75rem'>"
-    if ep > 0:
+    if ep > 1:
         body += template(
             '<a href="{{href}}">previous episode</a>\n',
             href=watch_url(show_path, ep-1),
