@@ -5,10 +5,10 @@
 ### running it via docker
 
 ```bash
-docker pull lqr471814/anicli-web
+docker pull lqr471814/anipy-web
 # the file that stores watch history
 touch history.json
-docker run -v ./history.json:/app/history.json -dp 8080:8080 -t lqr471814/anicli-web
+docker run -v ./history.json:/app/history.json -dp 8080:8080 -t lqr471814/anipy-web
 ```
 
 ### running it manually
