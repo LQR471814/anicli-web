@@ -13,7 +13,7 @@ docker run -v ./history.json:/app/history.json -dp 8080:8080 -t lqr471814/anipy-
 
 ### running it manually
 
-1. `pip install anipy-cli`
+1. `pip install anipy-cli bottle`
 2. `git clone <this repo>`
 3. `python3 server.py`
 
